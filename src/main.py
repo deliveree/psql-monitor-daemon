@@ -1,6 +1,8 @@
-from toml import load
 import logging
 import asyncio
+import pdb
+from redis import Redis
+import pickle
 
 
 async def connect_client(reader, writer):
@@ -10,6 +12,9 @@ async def connect_client(reader, writer):
 
         while True:
             data = await asyncio.wait_for(reader.read(1024), timeout=5)
+            # array = pickle.loads(data)
+            # key, value = array[0], array[1]
+            # redis.set(key, value)
 
             if not data:
                 writer.close()
@@ -21,13 +26,26 @@ async def connect_client(reader, writer):
             # await writer.drain()
     except Exception as e:
         print(e)
-    finally:
         writer.close()
 
 
+def get_corotine():
+    global redis
+    redis = Redis(db=1)
+
+
 async def run_server():
-    server = await asyncio.start_server(connect_client, '127.0.0.1', 3333)
-    await server.serve_forever()
+    global redis
+    redis = Redis(db=1)
+
+    coro = await asyncio.start_server(connect_client, '127.0.0.1', 3333)
+
+    try:
+        async with coro:
+            await coro.serve_forever()
+    except KeyboardInterrupt:
+        print("I AM BEING KeyboardInterrupt")
+        pass
 
 
 def main():
