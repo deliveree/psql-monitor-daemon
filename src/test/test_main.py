@@ -2,7 +2,7 @@ import sys, os
 sys.path.append(os.getcwd())
 
 import pytest
-# import asyncio
+import asyncio
 import socket
 import pickle
 # import threading
@@ -22,19 +22,38 @@ def redis():
     return redis
 
 # @pytest.mark.skip(reason="counter")
+# def test_client_save_to_redis_success_with_ssl(redis):
+#     ssl_context = ssl.SSLContext(ssl.PROTOCOL_TLS_CLIENT)
+#     ssl_context.load_verify_locations("../client.crt")
+
+#     client = ssl_context.wrap_socket(
+#         socket.socket(socket.AF_INET, socket.SOCK_STREAM),
+#         server_hostname='localhost'
+#     )
+#     client.connect(('localhost', 3333))
+
+#     key = "psql-1"
+#     value = 3
+
+#     client.send(pickle.dumps((key, value)))
+#     client.close()
+
+#     actual = redis.get(key)
+#     assert str(actual) == str(value)
+
+
 def test_client_save_to_redis_success_with_ssl(redis):
-    ssl_context = ssl.SSLContext(ssl.PROTOCOL_TLS_CLIENT)
-    ssl_context.load_verify_locations("client.crt")
-
-    client = ssl_context.wrap_socket(
-        socket.socket(socket.AF_INET, socket.SOCK_STREAM),
-        server_hostname='localhost'
-    )
-    client.connect(('localhost', 3333))
-
+    # asyncio.run(run_client())
     key = "psql-1"
     value = 3
 
+    ssl_context = ssl.create_default_context(ssl.Purpose.SERVER_AUTH, cafile="../server.crt")
+    ssl_context.load_cert_chain('../client.crt', '../client.key')
+
+    client = ssl_context.wrap_socket(
+        socket.socket(), server_hostname='example.com'
+    )
+    client.connect(('127.0.0.1', 3333))
     client.send(pickle.dumps((key, value)))
     client.close()
 

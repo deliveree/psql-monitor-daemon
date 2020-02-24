@@ -34,7 +34,7 @@ async def connect_client(reader, writer):
 async def run_server():
     ssl_context = ssl.create_default_context(ssl.Purpose.CLIENT_AUTH)
     ssl_context.verify_mode = ssl.CERT_REQUIRED
-    # ssl_context.load_cert_chain('server.crt', 'server.key')
+    ssl_context.load_cert_chain('server.crt', 'server.key')
     ssl_context.load_verify_locations(cafile="client_certs.crt")
 
     global redis

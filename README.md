@@ -10,6 +10,16 @@ Other apps who wants to use the data will need to fetch them from redis. Updated
 - Daemon must be able to receive dummy payload and store into Redis.
 - Must be able to handle at least 100 payload/second.
 
+## SSL Setup:
+
+Note that Common name for server must be your server hostname (ex: example.com)
+
+Generate certificates and key for server and client:
+```
+openssl req -new -newkey rsa:2048 -days 365 -nodes -x509 -keyout server.key -out server.crt
+openssl req -new -newkey rsa:2048 -days 365 -nodes -x509 -keyout client.key -out client.crt
+```
+
 
 ## Requirements
 - \>= Python 3.7.0
