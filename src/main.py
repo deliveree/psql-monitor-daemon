@@ -7,7 +7,6 @@ import pickle
 import time
 
 
-
 async def connect_client(reader, writer):
     try:
         addr = writer.get_extra_info('peername')
@@ -15,9 +14,8 @@ async def connect_client(reader, writer):
 
         while True:
             data = await asyncio.wait_for(reader.read(1024), timeout=5)
-            array = pickle.loads(data)
-            key, value = array[0], array[1]
-            redis.set(key, value)
+            data = pickle.loads(data)
+            redis.mset(data)
 
             if not data:
                 writer.close()
@@ -25,7 +23,7 @@ async def connect_client(reader, writer):
                 break
 
             print(str(addr) + " wrote: ")
-            print(str(key) + ": " + str(value))
+            print(str(data))
     except Exception as e:
         print(e)
         writer.close()
