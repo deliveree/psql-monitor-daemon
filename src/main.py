@@ -1,10 +1,15 @@
-import logging
 import asyncio
-import pdb
 import ssl
 from redis import Redis
 import pickle
-import time
+
+
+def get_ssl_context():
+    ssl_context = ssl.create_default_context(ssl.Purpose.CLIENT_AUTH)
+    ssl_context.verify_mode = ssl.CERT_REQUIRED
+    ssl_context.load_cert_chain('server.crt', 'server.key')
+    ssl_context.load_verify_locations(cafile="client_certs.crt")
+    return ssl_context
 
 
 async def connect_client(reader, writer):
@@ -13,15 +18,15 @@ async def connect_client(reader, writer):
         print('Recieved connection from {}'.format(str(addr)))
 
         while True:
-            data = await asyncio.wait_for(reader.read(1024), timeout=5)
-            data = pickle.loads(data)
-            redis.mset(data)
+            data = await reader.read(2048)
 
             if not data:
                 writer.close()
                 print('Closed connection from ' + str(addr))
                 break
 
+            data = pickle.loads(data)
+            redis.mset(data)
             print(str(addr) + " wrote: ")
             print(str(data))
     except Exception as e:
@@ -30,16 +35,11 @@ async def connect_client(reader, writer):
 
 
 async def run_server():
-    ssl_context = ssl.create_default_context(ssl.Purpose.CLIENT_AUTH)
-    ssl_context.verify_mode = ssl.CERT_REQUIRED
-    ssl_context.load_cert_chain('server.crt', 'server.key')
-    ssl_context.load_verify_locations(cafile="client_certs.crt")
-
     global redis
     redis = Redis(db=1)
 
     coro = await asyncio.start_server(
-        connect_client, '0.0.0.0', 1191, ssl=ssl_context
+        connect_client, '0.0.0.0', 1191, ssl=get_ssl_context()
     )
 
     async with coro:

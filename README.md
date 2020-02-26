@@ -1,7 +1,8 @@
 ## Daemon:
 
-Receive a dict from Clients and store them in redis along with the updated time.
-Other apps who wants to use the data will need to fetch them from redis.
+This app uses TCP Socket to receive dicts from multiple Clients and store them in redis:
+- Authentication by SSL
+- Port: 1191
 
 
 ## Getting Started
@@ -16,8 +17,8 @@ openssl req -new -newkey rsa:2048 -days 365 -nodes -x509 -keyout client.key -out
 
 **Note**: Common name for server must be your server hostname (ex: example.com)
 
-2. Put server.crt and server.key in /src
-3. Create a file name "client_certs.crt" and put all clients' certificate in there with the format:
+2. Put **server.crt** and **server.key** in /src
+3. Create a file name **client_certs.crt** and put all clients' certificate in there with the format:
 
 ```
 -----BEGIN CERTIFICATE-----
@@ -37,10 +38,10 @@ python src/main.py
 The server is waiting for connections from Clients on port 1191.
 
 
-### 3. Server API
-This server only handle and store type **dictionary**.
+### 3. Client Side
+This server only handles and stores type **dict**.
 
-In your client code:
+In your client's code:
 ```
 data = {
     "key_1": "value_1",
@@ -50,16 +51,34 @@ data = {
 client.send(pickle.dumps(data))
 ```
 
-## Done criterias:
-
-- Daemon must be able to handle authentication.
-- Daemon must be able to receive dummy payload and store into Redis.
-- Must be able to handle at least 100 payload/second.
-
 ## Requirements
 - \>= Python 3.7.0
 - asyncio
 
-## Commands:
-See all connected clients:\
-lsof -i -n | grep python3
+## Limit
+The tested upper limit of handling for the server is 100 payloads for 0.9s:
+- Each payload is sent by a Client.
+- Minimum interval between payload is 0.008
+
+## Development
+To run test:
+1. Start server in localhost. Make sure server's credentials (server.crt, server.key, client_certs.crt) are in src/
+
+    Make sure common name for server when creating certicate is **localhost**
+
+2. Make sure you have the following files in src/test:
+- Credentials for allowed client: **client.crt** and **client.key**
+- Credentials for unallowed client: **unallowed_client.crt** and **unallowed_client.key**
+
+3. Run server. In src/:
+```
+python main.py
+```
+
+4. Run tests. In src/test:
+```
+pytest --disable-warnings
+```
+
+## To Do:
+- Use logging instead of print
