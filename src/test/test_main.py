@@ -29,14 +29,21 @@ def redis():
 # run_client("CLIENT_2")
 
 
-@pytest.mark.skip()
-def test_server_save_to_redis_success(redis, client):
-    data = {"psql-1": 3}
-    client.connect(('127.0.0.1', 3333))
-    client.send(pickle.dumps(data))
+# @pytest.mark.skip()
+def test_server_save_to_redis_success(redis):
+    ssl_context = ssl.create_default_context(ssl.Purpose.SERVER_AUTH, cafile="../server.crt")
+    ssl_context.load_cert_chain('client.crt', 'client.key')
+    client = ssl_context.wrap_socket(
+        socket.socket(), server_hostname='example.com'
+    )
+
+    key = "psql-1"
+    value = 3
+    client.connect(('127.0.0.1', 1191))
+    client.send(pickle.dumps({key: value}))
     client.close()
 
-    actual = redis.get("psql-1")
+    actual = redis.get(key)
     assert int(actual) == value
 
 @pytest.mark.skip()

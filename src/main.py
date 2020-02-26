@@ -39,14 +39,11 @@ async def run_server():
     redis = Redis(db=1)
 
     coro = await asyncio.start_server(
-        connect_client, '127.0.0.1', 3333, ssl=ssl_context
+        connect_client, '0.0.0.0', 1191, ssl=ssl_context
     )
 
     async with coro:
         await coro.serve_forever()
 
 
-def main():
-    asyncio.run(run_server())
-
-main()
+asyncio.run(run_server())
