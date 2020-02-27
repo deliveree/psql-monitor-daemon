@@ -14,42 +14,44 @@ from time import time, sleep
 import pickle
 
 
+SERVER_CERT_PATH = "../src/server.crt"
+
+
 class Client:
     def __init__(self, name, con):
         self.name = name
         self.con = con
 
     def send(self):
-        payload_min_interval = 0.008
-
         start_loop = time()
         data = {self.name: 1}
         self.con.send(pickle.dumps(data))
         print(self.name + " sent")
-        remain_time = time() - start_loop
-
-        if remain_time < payload_min_interval:
-            sleep(0.008 - remain_time)
 
     def close(self):
         self.con.close()
 
 
-def run(server_hostname, total_client):
+def _get_ssl_context():
+    ssl_context = ssl.create_default_context(
+        ssl.Purpose.SERVER_AUTH, cafile=SERVER_CERT_PATH
+    )
+    ssl_context.load_cert_chain('client.crt', 'client.key')
+    return ssl_context
+
+
+def send_from_multiple_clients(server_hostname, total_client):
     """
-    Parameters:
-    name (str): Name to be sent in the payload to differentiate among Clients
+    Params:
+    server_hostname (str): The server's name that clients send data to
+    total_client (int): number of clients that send data to server
     """
 
     clients = []
-    ssl_context = ssl.create_default_context(
-        ssl.Purpose.SERVER_AUTH, cafile="../server.crt"
-    )
-    ssl_context.load_cert_chain('client.crt', 'client.key')
 
     for num in range(total_client):
         client_name = "CLIENT_" + str(num)
-        con = ssl_context.wrap_socket(
+        con = _get_ssl_context().wrap_socket(
             socket.socket(), server_hostname=server_hostname
         )
         con.connect((server_hostname, 1191))
@@ -65,3 +67,19 @@ def run(server_hostname, total_client):
 
     for client in clients:
         client.close()
+
+
+def send_from_a_client(server_hostname):
+    con = _get_ssl_context().wrap_socket(
+        socket.socket(), server_hostname=server_hostname
+    )
+    con.connect((server_hostname, 1191))
+
+    start = time()
+    for num in range(100):
+        key = "SINGLE_CLIENT_" + str(num)
+        con.send(pickle.dumps({key: str(num)}))
+        print("Send :" + str(num))
+    print("Runtime: " + str(time() - start))
+
+    con.close()

@@ -56,8 +56,8 @@ client.send(pickle.dumps(data))
 - asyncio
 
 ## Limit
-The tested upper limit of handling for the server is 100 payloads for 0.9s:
-- Each payload is sent by a Client.
+The tested upper limit of load handling for the server is 100 payloads for 0.9s:
+- All payload is sent by a Client.
 - Minimum interval between payload is 0.008
 
 ## Development
@@ -66,7 +66,7 @@ To run test:
 
     Make sure common name for server when creating certicate is **localhost**
 
-2. Make sure you have the following files in src/test:
+2. Make sure you have the following files in test/:
 - Credentials for allowed client: **client.crt** and **client.key**
 - Credentials for unallowed client: **unallowed_client.crt** and **unallowed_client.key**
 
@@ -75,7 +75,7 @@ To run test:
 python main.py
 ```
 
-4. Run tests. In src/test:
+4. Run tests. In test/:
 ```
 pytest --disable-warnings
 ```

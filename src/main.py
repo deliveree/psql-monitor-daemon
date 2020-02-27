@@ -4,7 +4,7 @@ from redis import Redis
 import pickle
 
 
-def get_ssl_context():
+def _get_ssl_context():
     ssl_context = ssl.create_default_context(ssl.Purpose.CLIENT_AUTH)
     ssl_context.verify_mode = ssl.CERT_REQUIRED
     ssl_context.load_cert_chain('server.crt', 'server.key')
@@ -12,7 +12,7 @@ def get_ssl_context():
     return ssl_context
 
 
-async def connect_client(reader, writer):
+async def _connect_client(reader, writer):
     try:
         addr = writer.get_extra_info('peername')
         print('Recieved connection from {}'.format(str(addr)))
@@ -39,11 +39,14 @@ async def run_server():
     redis = Redis(db=1)
 
     coro = await asyncio.start_server(
-        connect_client, '0.0.0.0', 1191, ssl=get_ssl_context()
+        _connect_client, '0.0.0.0', 1191, ssl=_get_ssl_context()
     )
 
     async with coro:
         await coro.serve_forever()
 
 
-asyncio.run(run_server())
+try:
+    asyncio.run(run_server())
+except KeyboardInterrupt:
+    print("Server is shut down by KeyboardInterrupt")
