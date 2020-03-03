@@ -46,7 +46,8 @@ async def run_server():
         await coro.serve_forever()
 
 
-try:
-    asyncio.run(run_server())
-except KeyboardInterrupt:
-    print("Server is shut down by KeyboardInterrupt")
+if __name__ == "__main__":
+    try:
+        asyncio.run(run_server())
+    except KeyboardInterrupt:
+        print("Server is shut down by KeyboardInterrupt")

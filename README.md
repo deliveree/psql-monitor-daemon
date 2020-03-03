@@ -15,7 +15,7 @@ openssl req -new -newkey rsa:2048 -days 365 -nodes -x509 -keyout server.key -out
 openssl req -new -newkey rsa:2048 -days 365 -nodes -x509 -keyout client.key -out client.crt
 ```
 
-**Note**: Common name for server must be your server hostname (ex: example.com)
+**Note**: Common name for server you declare when generating the certificate must be your server hostname (ex: example.com).
 
 2. Put **server.crt** and **server.key** in /src
 3. Create a file name **client_certs.crt** and put all clients' certificate in there with the format:
@@ -30,9 +30,10 @@ client 2's certificate
 ```
 
 ### 2. Run the server
+In **src/**:
 
 ```
-python src/main.py
+python main.py
 ```
 
 The server is waiting for connections from Clients on port 1191.
@@ -62,7 +63,7 @@ The tested upper limit of load handling for the server is 100 payloads for 0.9s:
 
 ## Development
 To run test:
-1. Start server in localhost. Make sure server's credentials (server.crt, server.key, client_certs.crt) are in src/
+1. Start server in localhost. Make sure server's credentials (server.crt, server.key, client_certs.crt) are in **src/**
 
     Make sure common name for server when creating certicate is **localhost**
 
@@ -70,12 +71,12 @@ To run test:
 - Credentials for allowed client: **client.crt** and **client.key**
 - Credentials for unallowed client: **unallowed_client.crt** and **unallowed_client.key**
 
-3. Run server. In src/:
+3. Run server. In **src/**:
 ```
 python main.py
 ```
 
-4. Run tests. In test/:
+4. Run tests. In **test/**:
 ```
 pytest --disable-warnings
 ```
