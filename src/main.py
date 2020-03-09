@@ -12,10 +12,19 @@ def _get_ssl_context():
     return ssl_context
 
 
-async def _connect_client(reader, writer):
+def _store(data):
+    for key, value in data.items():
+        if type(value) is dict:
+            for field, field_value in value.items():
+                redis.hset(key, field, field_value)
+        else:
+            redis.set(key, value)
+
+
+async def _handle_client(reader, writer):
     try:
         addr = writer.get_extra_info('peername')
-        print('Recieved connection from {}'.format(str(addr)))
+        print('Received connection from {}'.format(str(addr)))
 
         while True:
             data = await reader.read(2048)
@@ -26,7 +35,7 @@ async def _connect_client(reader, writer):
                 break
 
             data = pickle.loads(data)
-            redis.mset(data)
+            _store(data)
             print(str(addr) + " wrote: ")
             print(str(data))
     except Exception as e:
@@ -39,7 +48,7 @@ async def run_server():
     redis = Redis(db=1)
 
     coro = await asyncio.start_server(
-        _connect_client, '0.0.0.0', 1191, ssl=_get_ssl_context()
+        _handle_client, '0.0.0.0', 1191, ssl=_get_ssl_context()
     )
 
     async with coro:
