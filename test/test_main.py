@@ -1,45 +1,54 @@
+import os, sys
+sys.path.append(os.path.abspath('../src'))
+
 import pytest
 import asyncio
 import socket
 import ssl
-from pickle import dumps
+from json import dumps
 from time import sleep
 from redis import Redis
-from ssl import SSLCertVerificationError
+import ssl
+from multiprocessing import Process
+from toml import load
+from modules.conf import load_conf
+from modules.server import Server
+from modules.fake_client import FakeClient as Client
 
 
+conf = load_conf("conf")
 PORT = 1191
 HOST = "localhost"
-SERVER_CERT_PATH = "../src/server.crt"
 
 
 @pytest.fixture
 def redis():
-    redis = Redis(db=1)
+    redis_conf = conf["redis"]
+    redis = Redis(db=redis_conf["db"])
     yield redis
     redis.flushdb()
 
 
-def get_ssl_client():
-    ssl_context = ssl.create_default_context(
-        ssl.Purpose.SERVER_AUTH, cafile=SERVER_CERT_PATH
-    )
-    ssl_context.load_cert_chain('client.crt', 'client.key')
-
-    client = ssl_context.wrap_socket(
-        socket.socket(), server_hostname=HOST
-    )
-    client.connect((HOST, PORT))
-    return client
+def run_server():
+    server = Server(conf)
+    asyncio.run(server.start())
 
 
 def test_handle_single_dict(redis):
+    server_proc = Process(
+        target=run_server, daemon=True
+    )
+    server_proc.start()
+
     key = "psql-1"
     value = "Power"
-    client = get_ssl_client()
-    client.send(dumps({key: value}))
+    
+    client = Client(conf)
+    client.connect()
+    client.send({key: value})
     client.close()
     sleep(0.05)
+    server_proc.terminate()
 
     actual = redis.get(key)
     assert actual is not None and actual.decode() == value
@@ -95,7 +104,7 @@ def test_refuse_client_without_ssl(redis):
     assert len(redis.keys()) == 0
 
 
-# @pytest.mark.skip()
+@pytest.mark.skip()
 def test_refuse_client_by_invalid_certificate():
     ssl_context = ssl.create_default_context(
         ssl.Purpose.SERVER_AUTH, cafile=SERVER_CERT_PATH
