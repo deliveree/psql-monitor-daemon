@@ -4,7 +4,7 @@ import logging
 
 
 def config_log(log_conf):
-    log_path = log_conf.get("filepath", "main.log")
+    log_path = log_conf["filepath"]
     logging.basicConfig(
         filename=log_path,
         level=logging.INFO,
