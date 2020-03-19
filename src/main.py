@@ -1,5 +1,6 @@
 import asyncio
 from conf import load_conf
+import logging
 
 
 def config_log(log_conf):
@@ -19,4 +20,4 @@ if __name__ == "__main__":
     try:
         asyncio.run(server.run())
     except KeyboardInterrupt:
-        print("Server is shut down by KeyboardInterrupt")
+        logging.info("Server is shut down by KeyboardInterrupt")

@@ -6,6 +6,18 @@ import logging
 
 
 class Server:
+    """Create a server with SSL to handle multiple connections.
+
+    Store dictionary-type data sent by its connections to Redis.
+
+    Args:
+        redis (Redis): Redis instance that is used to write data to Redis.
+        host (str): Host of this server.
+        port (int): Port that this server is bound to.
+        paths (dict): Paths to SSL's files (key, cert) that are used to
+            authenticate connections.
+    """
+
     def __init__(self, conf):
         redis_conf = conf["redis"]
         self.redis = Redis(
@@ -35,16 +47,21 @@ class Server:
                 self.redis.set(key, value)
 
     async def _handle_client(self, reader, writer):
+        """Callback when a new client connection is established.
+
+         It receives a (reader, writer) pair as two arguments,
+         instances of the StreamReader and StreamWriter classes
+        """
         try:
             addr = writer.get_extra_info('peername')
-            print('Received connection from {}'.format(str(addr)))
+            logging.info('Received connection from {}'.format(str(addr)))
 
             while True:
                 data = await reader.read(2048)
 
                 if not data:
                     writer.close()
-                    print('Closed connection from ' + str(addr))
+                    logging.info('Closed connection from ' + str(addr))
                     break
 
                 data = json.loads(data)
@@ -52,7 +69,7 @@ class Server:
                 logging.info(str(addr) + " sent: ")
                 logging.info(str(data))
         except Exception as e:
-            print(e)
+            logging.error(e)
             writer.close()
 
     async def start(self):

@@ -1,14 +1,15 @@
 import ssl
 import socket
 from json import dumps
-from modules.conf import load_conf
+from time import sleep
 
 
 class FakeClient():
-    def __init__(self, conf):
+    def __init__(self, conf, name=None):
         daemon_conf = conf["daemon"]
         self.deamon_port = daemon_conf["port"]
         self.deamon_host = daemon_conf["host"]
+        self.name = name
 
         paths = conf["path"]
 
@@ -30,6 +31,8 @@ class FakeClient():
 
     def send(self, data):
         self.client.send(dumps(data).encode())
+        wait_for_server_store = 0.01
+        sleep(wait_for_server_store)
 
     def close(self):
         self.client.close()
