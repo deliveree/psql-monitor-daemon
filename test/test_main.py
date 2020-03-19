@@ -5,11 +5,13 @@ import pytest
 import asyncio
 import socket
 import ssl
+import logging
 from json import dumps
 from time import sleep
 from redis import Redis
 from multiprocessing import Process
 from toml import load
+import pdb
 
 from modules.conf import load_conf
 from modules.server import Server
@@ -20,6 +22,12 @@ from modules.test_payload import send_from_multiple_clients
 conf = load_conf("conf")
 host, port = conf["daemon"]["host"], conf["daemon"]["port"]
 
+logging.basicConfig(
+    filename="./test_main.log",
+    level=logging.INFO,
+    format="%(asctime)s - %(message)s"
+)
+
 
 @pytest.fixture
 def redis():
@@ -29,11 +37,6 @@ def redis():
     redis.flushdb()
 
 
-def run_server():
-    server = Server(conf)
-    asyncio.run(server.start())
-
-
 @pytest.fixture
 def start_server_process(autouse=True):
     server_proc = Process(target=run_server, daemon=True)
@@ -41,6 +44,11 @@ def start_server_process(autouse=True):
     sleep(0.05)
     yield
     server_proc.terminate()
+
+
+def run_server():
+    server = Server(conf)
+    asyncio.run(server.start())
 
 
 # @pytest.mark.skip()
@@ -103,7 +111,7 @@ def test_store_success_from_multiple_client(start_server_process, redis):
 
     assert actual_total == total_client
 
-
+# @pytest.mark.skip()
 def test_refuse_client_without_ssl(start_server_process, redis):
     client = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     client.connect((host, port))
@@ -113,7 +121,7 @@ def test_refuse_client_without_ssl(start_server_process, redis):
     assert len(redis.keys()) == 0
 
 
-def test_refuse_client_by_invalid_certificate(start_server_process):
+def test_refuse_client_by_invalid_certificate(start_server_process, redis):
     ssl_context = ssl.create_default_context(
         ssl.Purpose.SERVER_AUTH, cafile=conf["path"]["server_crt_path"]
     )
@@ -124,5 +132,7 @@ def test_refuse_client_by_invalid_certificate(start_server_process):
         socket.socket(), server_hostname=host
     )
 
-    with pytest.raises(OSError):
-        client.connect((host, port))
+    client.connect((host, port))
+    client.close()
+
+    assert len(redis.keys()) == 0

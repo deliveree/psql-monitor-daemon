@@ -2,7 +2,7 @@ from os import listdir
 from toml import load
 
 
-def load_conf(folder_path="../conf"):
+def load_conf(folder_path="conf"):
     """Loads all conf from all files inside a given folder.
 
     Args:
