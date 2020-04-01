@@ -1,7 +1,7 @@
 import asyncio
 import logging
 
-from modules.conf import load_conf
+from modules.utils import load_conf
 from modules.server import Server
 
 

@@ -13,7 +13,7 @@ from multiprocessing import Process
 from toml import load
 import pdb
 
-from modules.conf import load_conf
+from modules.utils import load_conf
 from modules.server import Server
 from modules.fake_client import FakeClient as Client
 from modules.test_payload import send_from_multiple_clients

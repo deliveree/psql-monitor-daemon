@@ -13,7 +13,7 @@ import socket
 from time import time, sleep
 from json import dumps
 
-from modules.conf import load_conf
+from modules.utils import load_conf
 from modules.fake_client import FakeClient as Client
 
 
